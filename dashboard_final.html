@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        /* CSS Lengkap */
+        /* CSS Lengkap - Tidak perlu diubah */
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&family=Roboto:wght@400;500&display=swap');
         :root { --primary-color: #0056b3; --secondary-color: #0d1b2a; --accent-color: #fca311; --bg-color: #f0f2f5; --text-light: #f1faee; --text-dark: #333; }
         body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; color: var(--text-dark); -webkit-font-smoothing: antialiased; }
@@ -45,7 +45,6 @@
         .form-group label { margin-bottom: 5px; font-weight: 500; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
         .full-width { grid-column: 1 / -1; }
-        /* CSS Tampilan Detail (Sudah disederhanakan tanpa tab) */
         #detail-view .container { background: var(--secondary-color); color: var(--text-light); border-radius: 15px; padding: 30px; max-width: 900px; margin: auto; }
         #detail-view h1, #detail-view h2, #detail-view h3 { color: var(--text-light); }
         #detail-view h1 { text-align: center; color: var(--accent-color); font-size: 2.2rem; margin-bottom: 25px; }
@@ -57,7 +56,7 @@
 <body>
 
     <div id="dashboard-view" class="view">
-        <div class.stats-grid>
+        <div class="stats-grid">
             <div class="stat-card"><div id="stat-total" class="value">0</div><div class="label">Total Rapat</div></div>
             <div class="stat-card"><div id="stat-terjadwal" class="value">0</div><div class="label">Rapat Terjadwal</div></div>
         </div>
@@ -78,7 +77,7 @@
                             <th>Tanggal & Waktu</th>
                             <th>Judul (Klik untuk Detail)</th>
                             <th>Penyelenggara</th>
-                            <th>Status</th>
+                            <th>Ruangan</th> <th>Status</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -129,9 +128,12 @@
             
             <div class="form-group"><label for="Penyelenggara">Penyelenggara</label><select id="Penyelenggara" name="Penyelenggara"></select></div>
             <div class="form-group"><label for="Status">Status</label><select id="Status" name="Status"></select></div>
+            
+            <div class="form-group full-width"><label for="Ruangan">Ruangan</label><select id="Ruangan" name="Ruangan"></select></div>
+
             <div class="form-group"><label for="MeetingID">Meeting ID</label><input type="text" id="MeetingID" name="MeetingID"></div>
             <div class="form-group"><label for="Passcode">Passcode</label><input type="text" id="Passcode" name="Passcode"></div>
-            <div class.form-group full-width"><label for="Link">Link Meeting</label><input type="text" id="Link" name="Link"></div>
+            <div class="form-group full-width"><label for="Link">Link Meeting</label><input type="text" id="Link" name="Link"></div>
           </div>
           <button type="submit" id="submitBtn" class="btn-primary" style="width:100%;margin-top:20px;"></button>
         </form>
@@ -139,10 +141,16 @@
     </div>
     
     <script>
-        // JANGAN LUPA: Ganti dengan URL Apps Script Anda yang sudah di-deploy
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxDxjqspybO3GMmK99S0IMPsfHkS18RciAF2WFopcdhbmnsXdc0CwcA4icpRFwYGAo/exec';
+        // ⚠️⚠️⚠️ PASTE URL ANDA DARI FASE 2 DI SINI ⚠️⚠️⚠️
+        // 1. HAPUS 'PASTE_URL...'
+        // 2. PASTE URL ANDA DARI NOTEPAD DI ANTARA TANDA KUTIP
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwBEYxh9ycFkJ9-d6geX2omFAKmu4teUZM2-Gg1KF5pBkwx_vdTTcv3cogRWUoUVjx6/exec';
         
-        let ALL_DATA = { jadwal: [], penyelenggara: [], status: [] };
+        // -------------------------------------------------------------
+        // TIDAK ADA YANG PERLU DIUBAH DI BAWAH INI
+        // -------------------------------------------------------------
+        
+        let ALL_DATA = { jadwal: [], penyelenggara: [], status: [], ruangan: [] };
         
         // --- Fungsi Utama ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -154,7 +162,6 @@
             document.body.addEventListener('click', e => {
                 if (e.target.classList.contains('back-to-dashboard')) showView('dashboard-view');
             });
-            
             document.getElementById('export-btn').addEventListener('click', exportToImage);
         });
         
@@ -192,6 +199,7 @@
                     <td>${row.Tanggal || ''}<br><small>${row.Waktu || ''}</small></td>
                     <td><a href="#" class="clickable-title" data-id="${row.ID}">${row.Judul}</a></td>
                     <td>${row.Penyelenggara || ''}</td>
+                    <td>${row.Ruangan || ''}</td>
                     <td>${row.Status || ''}</td>
                     <td class="action-buttons">
                         <button class="btn-secondary" onclick="openFormModal('${row.ID}')">Edit</button>
@@ -211,13 +219,20 @@
         function populateDropdowns() {
             const penyelenggaraSelect = document.getElementById('Penyelenggara');
             const statusSelect = document.getElementById('Status');
+            const ruanganSelect = document.getElementById('Ruangan'); 
+
             penyelenggaraSelect.innerHTML = '<option value="">-- Pilih Penyelenggara --</option>';
             statusSelect.innerHTML = '<option value="">-- Pilih Status --</option>';
+            ruanganSelect.innerHTML = '<option value="">-- Pilih Ruangan --</option>'; 
+
             ALL_DATA.penyelenggara.forEach(p => {
                 penyelenggaraSelect.innerHTML += `<option value="${p}">${p}</option>`;
             });
             ALL_DATA.status.forEach(s => {
                 statusSelect.innerHTML += `<option value="${s}">${s}</option>`;
+            });
+            ALL_DATA.ruangan.forEach(r => {
+                ruanganSelect.innerHTML += `<option value="${r}">${r}</option>`;
             });
         }
 
@@ -241,7 +256,6 @@
             modal.style.display = 'flex';
         }
 
-        // Versi renderDetailView (FINAL - TANPA NOTULENSI)
         function renderDetailView(id) {
             fetch(`${SCRIPT_URL}?action=getMeetingDetails&id=${id}`)
                 .then(res => res.json())
@@ -252,14 +266,19 @@
                     const detailView = document.getElementById('detail-view');
                     
                     detailView.innerHTML = `
-                      <div class="container">
-                        <button class="back-to-dashboard btn-secondary" style="margin-bottom: 20px;">&larr; Kembali ke Daftar Rapat</button>
+                      <div class="container" id="detail-export-area">
+                        
+                        <div class="detail-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                            <button class="back-to-dashboard btn-secondary">&larr; Kembali ke Daftar Rapat</button>
+                            <button id="export-detail-btn" class="btn-primary" onclick="exportDetailToImage()">Ekspor Detail ke JPG</button>
+                        </div>
                         
                         <h1>${jadwal.Judul}</h1>
                         
                         <h3 style="color: var(--accent-color);">Detail Rapat</h3>
                         <p><strong>Tanggal & Waktu:</strong> ${jadwal.Tanggal || '-'} | ${jadwal.Waktu || '-'}</p>
                         <p><strong>Penyelenggara:</strong> ${jadwal.Penyelenggara || '-'}</p>
+                        <p><strong>Ruangan:</strong> ${jadwal.Ruangan || '-'}</p>
                         <p><strong>Status:</strong> ${jadwal.Status || '-'}</p>
                         
                         <h3 style="color: var(--accent-color); margin-top:20px;">Info Koneksi</h3>
@@ -314,35 +333,72 @@
             }
         }
 
-        // Fungsi baru untuk Ekspor JPG
+        // Ekspor Halaman Utama (Full View)
         function exportToImage() {
-            const targetElement = document.getElementById('data-table-container');
+            const targetElement = document.getElementById('dashboard-view');
             const exportButton = document.getElementById('export-btn');
-            
-            exportButton.textContent = 'Mengekspor...';
-            exportButton.disabled = true;
+            const addNewButton = document.getElementById('add-new-btn');
+            const actionButtons = document.querySelectorAll('.action-buttons'); 
+
+            exportButton.style.visibility = 'hidden';
+            addNewButton.style.visibility = 'hidden';
+            actionButtons.forEach(btn => btn.style.visibility = 'hidden');
 
             html2canvas(targetElement, {
-                scale: 2, // Resolusi 2x lipat
-                useCORS: true 
+                scale: 2,
+                useCORS: true,
+                windowWidth: targetElement.scrollWidth,
+                windowHeight: targetElement.scrollHeight
             }).then(canvas => {
-                const jpgDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                
+                const jpgDataUrl = canvas.toDataURL('jpeg', 0.9);
                 const link = document.createElement('a');
-                link.download = 'jadwal-rapat.jpg'; // Nama file
+                link.download = 'dashboard-rapat-full-view.jpg';
                 link.href = jpgDataUrl;
-                
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
                 
-                exportButton.textContent = 'Ekspor ke JPG';
-                exportButton.disabled = false;
+                exportButton.style.visibility = 'visible';
+                addNewButton.style.visibility = 'visible';
+                actionButtons.forEach(btn => btn.style.visibility = 'visible');
                 
             }).catch(err => {
+                exportButton.style.visibility = 'visible';
+                addNewButton.style.visibility = 'visible';
+                actionButtons.forEach(btn => btn.style.visibility = 'visible');
                 handleError(new Error('Gagal mengekspor gambar: ' + err.message));
-                exportButton.textContent = 'Ekspor ke JPG';
-                exportButton.disabled = false;
+            });
+        }
+
+        // Ekspor Halaman Detail
+        function exportDetailToImage() {
+            const targetElement = document.getElementById('detail-export-area');
+            const backButton = document.querySelector('.back-to-dashboard');
+            const exportButton = document.getElementById('export-detail-btn');
+
+            if(backButton) backButton.style.visibility = 'hidden';
+            if(exportButton) exportButton.style.visibility = 'hidden';
+
+            html2canvas(targetElement, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: null
+            }).then(canvas => {
+                const jpgDataUrl = canvas.toDataURL('jpeg', 0.9);
+                const link = document.createElement('a');
+                link.download = 'detail-rapat.jpg';
+                link.href = jpgDataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                if(backButton) backButton.style.visibility = 'visible';
+                if(exportButton) exportButton.style.visibility = 'visible';
+
+            }).catch(err => {
+                if(backButton) backButton.style.visibility = 'visible';
+                if(exportButton) exportButton.style.visibility = 'visible';
+                handleError(new Error('Gagal mengekspor detail: ' + err.message));
             });
         }
         
